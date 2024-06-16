@@ -1,4 +1,4 @@
-# MIDI Mcoded7 Codes
+# MIDI Mcoded7 Codecs
 
 An implementation of MIDI Mcoded7 encoder and decoder.
 
