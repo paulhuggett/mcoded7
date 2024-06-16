@@ -1,0 +1,120 @@
+name: CI Build & Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [assigned, opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          # macOS builds
+          # ~~~~~~~~~~~~
+          - name: macOS-14/Xcode/Debug
+            build_type: Debug
+            generator: Xcode
+            os: macos-14
+            package: TGZ
+
+          - name: macOS-14/Xcode/Release
+            build_type: Release
+            generator: Xcode
+            os: macos-14
+            package: TGZ
+
+          # Ubuntu builds
+          # ~~~~~~~~~~~~~
+          - name: Ubuntu-22.04/gcc/Debug
+            apt_install: ninja-build
+            build_type: Debug
+            cxx_compiler: -D CMAKE_CXX_COMPILER=g++ -D CMAKE_C_COMPILER=gcc
+            options:
+            generator: Unix Makefiles
+            os: ubuntu-22.04
+            package: TGZ
+
+          - name: Ubuntu-22.04/gcc/Release
+            apt_install: ninja-build
+            build_type: Release
+            cxx_compiler: -D CMAKE_CXX_COMPILER=g++ -D CMAKE_C_COMPILER=gcc
+            generator: Unix Makefiles
+            os: ubuntu-22.04
+            package: TGZ
+
+          - name: Ubuntu-22.04/clang/Debug
+            apt_install: cmake ninja-build
+            build_type: Debug
+            cxx_compiler: -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang
+            generator: Ninja
+            options:
+            os: ubuntu-22.04
+            package: TGZ
+
+          - name: Ubuntu-22.04/clang/Release
+            apt_install: cmake ninja-build
+            build_type: Release
+            cxx_compiler: -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang
+            generator: Ninja
+            options:
+            os: ubuntu-22.04
+            package: TGZ
+
+          # Windows builds
+          # ~~~~~~~~~~~~~~
+          - name: Windows-latest/VS2022/Debug
+            build_type: Debug
+            generator: Visual Studio 17 2022
+            os: windows-latest
+            package: ZIP
+
+          - name: Windows-latest/VS2022/Release
+            build_type: Release
+            generator: Visual Studio 17 2022
+            os: windows-latest
+            package: ZIP
+
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: True
+
+      - name: Install Dependencies (Linux)
+        if: startsWith (matrix.os, 'ubuntu-') && matrix.apt_install != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.apt_install }}
+
+      - name: Create Build Environment
+        shell: bash
+        run: cmake -E make_directory ${{ github.workspace }}/build
+
+      - name: CMake Configure
+        shell: bash
+        run: |
+          cmake -S "${{ github.workspace }}"                 \
+                -B "${{ github.workspace }}/build"           \
+                -G "${{ matrix.generator }}"                 \
+                -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                -D ICUBABY_EXAMPLES=Yes                      \
+                -D ICUBABY_WERROR=Yes                        \
+                ${{ matrix.cxx_compiler }}                   \
+                ${{ matrix.options }}
+
+      - name: Build
+        shell: bash
+        run: cmake --build "${{ github.workspace }}/build" --config ${{ matrix.build_type }} --verbose
+
+      - name: Run Unit Tests
+        run: ctest --output-on-failure --test-dir "${{github.workspace}}/build" --build-config ${{ matrix.build_type }}
