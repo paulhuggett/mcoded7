@@ -23,7 +23,7 @@ function (setup_gtest)
       endif ()
       set (gintelllvm_options ${gclang_options} -Wno-tautological-constant-compare)
 
-      target_compile_features (${target} PUBLIC cxx_std_20)
+      target_compile_features (${target} PUBLIC cxx_std_14)
       target_compile_definitions (${target} PUBLIC GTEST_REMOVE_LEGACY_TEST_CASEAPI_=1)
       target_compile_options (${target} PRIVATE
         $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:${gclang_options}>
@@ -61,12 +61,12 @@ set (msvc_warning_options /W3)
 set (warning_options -Wall -Wextra -pedantic)
 add_library(mcoded7 INTERFACE mcoded7.hpp)
 target_include_directories (mcoded7 INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
-target_compile_features(mcoded7 INTERFACE cxx_std_20)
+target_compile_features(mcoded7 INTERFACE cxx_std_11)
 target_compile_options (mcoded7 INTERFACE $<IF:$<CXX_COMPILER_ID:MSVC>,${msvc_warning_options},${warning_options}>)
 
 
 add_executable (unittests unittests.cpp)
-target_compile_features(unittests PRIVATE cxx_std_20)
+target_compile_features(unittests PRIVATE cxx_std_11)
 target_compile_options (mcoded7 INTERFACE $<IF:$<CXX_COMPILER_ID:MSVC>,${msvc_warning_options},${warning_options}>)
 target_compile_definitions (unittests PRIVATE MCODED7_FUZZTEST=$<BOOL:${MCODED7_FUZZTEST}>)
 target_link_libraries(unittests PRIVATE mcoded7)

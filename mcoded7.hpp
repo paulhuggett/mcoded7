@@ -34,10 +34,10 @@ public:
   /// \param value  The value to be encoded.
   /// \param out  An output iterator to which the output sequence is written.
   /// \returns  Iterator one past the last element assigned.
-  template <std::output_iterator<std::byte> OutputIterator>
-  OutputIterator parse_byte (std::byte const value, OutputIterator out) {
+  template <typename OutputIterator>
+  OutputIterator parse_byte (std::uint8_t const value, OutputIterator out) {
     assert (pos_ < 7U && "on entry, pos_ must be in the range [0,7)");
-    static constexpr auto msb = std::byte{0x80};
+    static constexpr auto msb = 0x80;
     ++pos_;
     buffer_[0] |= (value & msb) >> pos_;
     buffer_[pos_] = value & ~msb;
@@ -52,20 +52,19 @@ public:
   /// \tparam OutputIterator  An output iterator type to which bytes can be written.
   /// \param out  An output iterator to which the output sequence is written.
   /// \returns  Iterator one past the last element assigned.
-  template <std::output_iterator<std::byte> OutputIterator>
-  OutputIterator flush (OutputIterator out) {
+  template <typename OutputIterator> OutputIterator flush (OutputIterator out) {
     if (pos_ > 0U) {
       auto const first = std::begin (buffer_);
-      out = std::ranges::copy (first, first + pos_ + 1, out).out;
-      buffer_[0] = std::byte{0};  // reset the MSB for the next block of 7.
+      out = std::copy (first, first + pos_ + 1, out);
+      buffer_[0] = 0U;  // reset the MSB for the next block of 7.
       pos_ = 0U;
     }
     return out;
   }
 
 private:
-  std::array<std::byte, 8> buffer_{};
-  std::uint_least8_t pos_ = 0;
+  std::array<std::uint8_t, 8> buffer_{};
+  std::uint8_t pos_ = 0;
 };
 
 class decoder {
@@ -74,18 +73,18 @@ public:
   /// \param value  The value to be decoded.
   /// \param out  An output iterator to which the output sequence is written.
   /// \returns  Iterator one past the last element assigned.
-  template <std::output_iterator<std::byte> OutputIterator>
-  OutputIterator parse_byte (std::byte const value, OutputIterator out) {
+  template <typename OutputIterator>
+  OutputIterator parse_byte (std::uint8_t const value, OutputIterator out) {
     assert (pos_ < 8U && "On entry, pos_ must be in the range [0,8)");
     if (pos_ == 7U) {
       // This the the byte that encodes the sign bits of the seven following bytes.
       msbs_ = value;
     } else {
-      assert (static_cast<unsigned> (value & std::byte{0x80}) == 0 &&
+      assert (static_cast<unsigned> (value & 0x80) == 0 &&
               "Mcoded7 data should always have the most significant bit clear");
       // Assemble the output byte from ths input value and its most-significant sign bit stored in
       // msbs_.
-      *(out++) = value | (((msbs_ >> pos_) & std::byte{0x01}) << 7);
+      *(out++) = value | (((msbs_ >> pos_) & 0x01) << 7);
       if (pos_ == 0U) {
         pos_ = 8U;
       }
@@ -99,14 +98,11 @@ public:
   /// \tparam OutputIterator  An output iterator type to which bytes can be written.
   /// \param out  An output iterator to which the output sequence is written.
   /// \returns  Iterator one past the last element assigned.
-  template <std::output_iterator<std::byte> OutputIterator>
-  OutputIterator flush (OutputIterator out) {
-    return out;
-  }
+  template <typename OutputIterator> OutputIterator flush (OutputIterator out) { return out; }
 
 private:
-  std::byte msbs_ = std::byte{0};
-  std::uint_least8_t pos_ = 7U;
+  std::uint8_t msbs_ = 0U;
+  std::uint8_t pos_ = 7U;
 };
 
 }  // end namespace mcoded7
