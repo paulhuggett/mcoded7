@@ -78,3 +78,9 @@ else ()
   target_link_libraries (unittests PRIVATE gmock_main)
 endif (MCODED7_FUZZTEST)
 add_test (NAME unittests COMMAND unittests)
+
+
+add_executable (encode encode.cpp)
+target_compile_features(encode PRIVATE cxx_std_11)
+target_compile_options (encode PRIVATE $<IF:$<CXX_COMPILER_ID:MSVC>,${msvc_warning_options},${warning_options}>)
+target_link_libraries(encode PRIVATE mcoded7)

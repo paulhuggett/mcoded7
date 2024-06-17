@@ -113,4 +113,31 @@ FUZZ_TEST (Mcoded7, Mcoded7RoundTrip);
 // NOLINTNEXTLINE
 TEST (Mcoded7, EmptyRoundTrip) {
   Mcoded7RoundTrip (std::vector<std::uint8_t>{});
+<<<<<<< HEAD
+=======
+}
+
+// NOLINTNEXTLINE
+TEST (Mcoded7, GoodInput) {
+  mcoded7::decoder decoder;
+  std::array<std::uint8_t, 1> output;
+  auto* out = output.data ();
+  out = decoder.parse_byte (0b00000000, out);
+  EXPECT_TRUE (decoder.good ());
+  out = decoder.parse_byte (0b00010010, out);
+  EXPECT_TRUE (decoder.good ());
+}
+
+// NOLINTNEXTLINE
+TEST (Mcoded7, BadInput) {
+  mcoded7::decoder decoder;
+  std::array<std::uint8_t, 2> output;
+  auto* out = output.data ();
+  out = decoder.parse_byte (0b00000000, out);
+  EXPECT_TRUE (decoder.good ());
+  out = decoder.parse_byte (0b10010010, out);
+  EXPECT_FALSE (decoder.good ()) << "Most significant bit was set: state should be bad";
+  out = decoder.parse_byte (0b00010010, out);
+  EXPECT_FALSE (decoder.good ()) << "Expected the 'good' state to be sticky";
+>>>>>>> d9325b5 (kModify so that it will compile as C++11.)
 }
