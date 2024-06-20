@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstring>
 
 #include "mcoded7.hpp"
 
