@@ -30,6 +30,7 @@ namespace mcoded7 {
 
 class encoder {
 public:
+  /// The maximum number of output bytes that can be generated from a single call to parse_byte().
   static constexpr auto max_size = std::size_t{8};
 
   /// \tparam OutputIterator  An output iterator type to which bytes can be written.
@@ -57,6 +58,7 @@ private:
 
 class decoder {
 public:
+  /// The maximum number of output bytes that can be generated from a single call to parse_byte().
   static constexpr auto max_size = std::size_t{1};
 
   constexpr decoder () : pos_{7U}, bad_{0} {}
@@ -83,9 +85,10 @@ private:
   //. The value of 'pos_' when the MSB byte is next.
   static constexpr auto msbs_byte_pos_ = 7U;
 
-  std::uint8_t msbs_ = 0U;
+  std::uint8_t msbs_ = 0U;  ///< The most significant bigs of the current group of bytes.
+  ///< Position within the current group of bytes (starting at 7 and counting down).
   std::uint8_t pos_ : 3;
-  std::uint8_t bad_ : 1;
+  std::uint8_t bad_ : 1;  ///< 1 if bad input was detected, 0 otherwise.
 };
 
 //*  _            _                   _        _   _           *
@@ -123,7 +126,7 @@ OutputIterator decoder::parse_byte (std::uint8_t const value, OutputIterator out
     msbs_ = value;
   } else {
     // The MSB should not be set in mcoded7 data.
-    bad_ |= static_cast<uint8_t> (value >> 7U);
+    bad_ |= static_cast<std::uint8_t> (value >> 7U);
 
     // Assemble the output byte from ths input value and its most-significant sign bit stored in
     // msbs_.
